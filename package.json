@@ -1,0 +1,13 @@
+{
+  "name": "node-minimal-app",
+  "version": "1.0.0",
+  "description": "A minimal Node.js project to test Render deployment",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {}
+}
