@@ -23,6 +23,15 @@ mysqlConnection.connect((err) => {
     console.log('Conexión a MySQL establecida');
 });
 
+// ****** Endpoint para obtener el árbol genealógico URTURI ********
+app.get('/api/arbol-genealogico', (req, res) => {
+    const query = 'SELECT * FROM URTURI ORDER BY nivel ASC, fecha_nacimiento ASC';
+    mysqlConnection.query(query, (err, results) => {
+        if (err) throw err;
+        res.json(results);
+    });
+});
+
 // Conexión a la base de datos antigua
 const oldDbConnection = mysql.createConnection({
     host: 'sql10.freesqldatabase.com',
