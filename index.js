@@ -43,8 +43,8 @@ const newDbConnection = mysql.createConnection({
   connectTimeout: 10000 // Timeout de conexión de 10 segundos
 });
 
-// Nueva API para ejecutar la transferencia de datos
-app.post('/api/transferir-datos', (req, res) => {
+// Nueva API para ejecutar la transferencia de datos tabla USUARIOS
+app.get('/api/transferir-datos-usuarios', (req, res) => {
   // Conectar a la base de datos antigua
   oldDbConnection.connect(err => {
     if (err) {
@@ -112,6 +112,74 @@ app.post('/api/transferir-datos', (req, res) => {
   });
 });
 
+// Nueva API para ejecutar la transferencia de datos tabla URTURI
+app.get('/api/transferir-datos-usuarios-URTURI', (req, res) => {
+  // Conectar a la base de datos antigua
+  oldDbConnection.connect(err => {
+    if (err) {
+      console.error('Error al conectar a la base de datos antigua:', err);
+      return res.status(500).send('Error al conectar a la base de datos antigua.');
+    }
+
+    // Obtener los nombres y tipos de campos
+    oldDbConnection.query('SHOW COLUMNS FROM URTURI', (error, columns) => {
+      if (error) {
+        console.error('Error al obtener columnas:', error);
+        return res.status(500).send('Error al obtener columnas de la tabla.');
+      }
+
+      // Construir el SQL para crear la tabla en la nueva base de datos
+      let createTableQuery = 'CREATE TABLE IF NOT EXISTS URTURI (';
+      columns.forEach((column, index) => {
+        createTableQuery += `${column.Field} ${column.Type}`;
+        if (column.Null === 'NO') createTableQuery += ' NOT NULL';
+        if (column.Default !== null) createTableQuery += ` DEFAULT '${column.Default}'`;
+        if (index < columns.length - 1) createTableQuery += ', ';
+      });
+      createTableQuery += ')';
+
+      // Conectar a la nueva base de datos y crear la tabla
+      newDbConnection.connect(err => {
+        if (err) {
+          console.error('Error al conectar a la nueva base de datos:', err);
+          return res.status(500).send('Error al conectar a la nueva base de datos.');
+        }
+
+        newDbConnection.query(createTableQuery, (error) => {
+          if (error) {
+            console.error('Error al crear la tabla:', error);
+            return res.status(500).send('Error al crear la tabla en la nueva base de datos.');
+          }
+
+          // Obtener los datos de la tabla antigua y transferirlos
+          oldDbConnection.query('SELECT * FROM URTURI', (error, results) => {
+            if (error) {
+              console.error('Error al obtener los datos:', error);
+              return res.status(500).send('Error al obtener los datos de la tabla.');
+            }
+
+            // Insertar los datos en la nueva base de datos
+            results.forEach(row => {
+              const insertQuery = 'INSERT INTO URTURI SET ?';
+              newDbConnection.query(insertQuery, row, (error, result) => {
+                if (error) {
+                  console.error('Error al insertar datos:', error);
+                } else {
+                  console.log(`Datos insertados: ID ${result.insertId}`);
+                }
+              });
+            });
+
+            // Cerrar las conexiones
+            newDbConnection.end();
+            oldDbConnection.end();
+            res.send('Transferencia de datos completada con éxito.');
+          });
+        });
+      });
+    });
+  });
+});
 
 // ******************************************************************
 app.listen(PORT, () => {
