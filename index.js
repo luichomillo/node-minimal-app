@@ -1,11 +1,9 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const admin = require("firebase-admin");
 
 // *** PRUEBA DE BASE DE DATOS MYSQL ***
 const mysql = require('mysql');
